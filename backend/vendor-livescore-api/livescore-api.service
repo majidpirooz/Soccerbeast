@@ -1,0 +1,24 @@
+[Unit]
+Description=Live Score API (varzesh3 scraper)
+After=network.target
+
+[Service]
+Type=simple
+# Adjust these two paths for your VPS layout:
+WorkingDirectory=/opt/livescore-api
+ExecStart=/opt/livescore-api/venv/bin/uvicorn app.main:app --host 127.0.0.1 --port 8000
+
+# Run as an unprivileged user you create for this, e.g.:
+#   sudo useradd -r -s /usr/sbin/nologin livescore
+User=livescore
+Group=livescore
+
+Restart=on-failure
+RestartSec=5
+EnvironmentFile=/opt/livescore-api/.env
+
+# Give Playwright/Chromium a real tmp dir with enough room
+Environment=PLAYWRIGHT_BROWSERS_PATH=/opt/livescore-api/.playwright
+
+[Install]
+WantedBy=multi-user.target

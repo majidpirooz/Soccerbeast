@@ -1,0 +1,14 @@
+services:
+  web:
+    build:
+      context: .
+      args:
+        # Leave blank to run in mock mode. Once a real backend exists,
+        # set this to its public URL and run `docker compose up -d --build`
+        # again to rebake it into the bundle.
+        VITE_API_BASE_URL: ""
+    restart: unless-stopped
+    ports:
+      # Bound to localhost only — the host's nginx (with the real TLS cert)
+      # is what's actually reachable from the internet, and proxies to this.
+      - "127.0.0.1:8080:80"

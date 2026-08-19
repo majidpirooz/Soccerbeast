@@ -1,0 +1,40 @@
+@import url('https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;600;700;800&family=Vazirmatn:wght@500;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background:
+    radial-gradient(1100px 500px at 15% -10%, rgba(232, 184, 75, 0.07), transparent 60%),
+    radial-gradient(900px 500px at 110% 10%, rgba(99, 217, 230, 0.06), transparent 60%),
+    #0a120e;
+  color: #f2f6f2;
+}
+
+/* .clip-pentagon was the placeholder brand-mark shape before the real
+   Soccer Beast logo (public/logo.png) existed — no longer referenced by
+   any component, kept here only because .clip-trophy-gold below happens
+   to share its polygon and might want to diverge from it later. */
+.clip-trophy-gold {
+  clip-path: polygon(50% 0%, 100% 38%, 82% 100%, 18% 100%, 0% 38%);
+}
+
+.clip-trophy-diamond {
+  clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+}
+
+.bg-pitch-stripes {
+  background-image: repeating-linear-gradient(115deg, #16261c 0 40px, #132018 40px 80px);
+}
+.bg-pitch-stripes-alt {
+  background-image: repeating-linear-gradient(70deg, #182a20 0 34px, #132018 34px 68px);
+}
+
+[dir='rtl'] .rtl-flip {
+  transform: scaleX(-1);
+}
