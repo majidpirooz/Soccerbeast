@@ -53,6 +53,11 @@ export default function LivePage({
         ))}
       </div>
 
+      {leagueGroups.length === 0 && (
+        <p className="text-textMute text-[13px] py-10 text-center">
+          {t('live.noMatches', 'No matches to show right now — check back later, or ask an admin whether the data sources are running.')}
+        </p>
+      )}
       {leagueGroups.map((g) => (
         <div key={g.id} className="mb-5.5">
           <h3 className="flex items-center gap-2 text-[13.5px] font-extrabold text-textDim mb-2.5 ps-0.5">

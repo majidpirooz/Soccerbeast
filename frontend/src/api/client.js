@@ -59,9 +59,22 @@ export async function request(path, { method = 'GET', body, headers = {} } = {})
  * imports, MatchesStatistics offline HTML / online workbook uploads).
  * `fields` is a plain object of extra form fields alongside `file`.
  */
+/**
+ * upload — multipart/form-data helper for file uploads (crests, arena
+ * imports, MatchesStatistics offline HTML / online workbook uploads).
+ * `file` is a single File for the common case, or a File[] for the
+ * MatchesStatistics offline-mode HTML batch (multiple saved pages, one per
+ * team) -- each gets appended under the same 'files' field name, which the
+ * backend's multer config reads as an array. `fields` is a plain object of
+ * extra form fields alongside the file(s).
+ */
 export async function upload(path, file, fields = {}) {
   const form = new FormData();
-  if (file) form.append('file', file);
+  if (Array.isArray(file)) {
+    file.forEach((f) => form.append('files', f));
+  } else if (file) {
+    form.append('file', file);
+  }
   Object.entries(fields).forEach(([k, v]) => form.append(k, v));
 
   const res = await fetch(`${BASE_URL}${path}`, {

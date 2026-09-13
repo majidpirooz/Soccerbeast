@@ -48,14 +48,31 @@ export default function ProfilePageContainer({ lang, onLangChange }) {
       }}
       previousLeagues={profile.data.previousLeagues}
       onSaveAccount={async ({ username, password, avatarFile }) => {
-        if (avatarFile) await uploadAvatar(avatarFile).catch((err) => console.error('avatar upload failed', err));
-        if (username || password) await saveAccount({ username, password }).catch((err) => console.error('save account failed', err));
+        // NOTE: errors are deliberately NOT caught here — they propagate to
+        // AccountSettingsForm's own try/catch, which is what actually shows
+        // the user a real success/error message. The previous version
+        // caught-and-console.error'd here, meaning the promise always
+        // resolved successfully even on a real failure — the literal cause
+        // of "Save Changes button does not work" (it saved fine when it
+        // worked, and showed nothing at all when it didn't).
+        if (avatarFile) await uploadAvatar(avatarFile);
+        if (username || password) await saveAccount({ username, password });
       }}
       onCreateLeague={async () => {
+        const name = window.prompt('Name your league:');
+        if (!name || !name.trim()) return;
         try {
-          await createLeague('New League');
+          const { league } = await createLeague(name.trim());
+          // Fix for "Create My League button does not work": it previously
+          // silently created a league literally named "New League" with no
+          // input and no visible result at all. Now it asks for a real name
+          // and — since there's nowhere in the UI yet that lists a user's
+          // own active leagues (see ROADMAP.md) — surfaces the invitation
+          // code directly, since that's the one thing the user actually
+          // needs to go use it (share it, or enter it themselves via Join).
+          window.alert(`"${league.name}" created! Invitation code: ${league.code}`);
         } catch (err) {
-          console.error('create league failed', err);
+          window.alert(`Couldn't create the league: ${err?.message || 'something went wrong.'}`);
         }
       }}
       onAddCompareUser={(id) => setCompareIds([...effectiveCompareIds, id])}

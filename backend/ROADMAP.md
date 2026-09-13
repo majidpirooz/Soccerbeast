@@ -223,3 +223,231 @@ and incomplete entries (none found); the `t()` resolution logic itself was
 unit-tested against edge cases (unseeded key, no fallback provided, empty
 translation value) outside of React, since no browser is available in this
 environment to render the actual components.
+
+## Post-deployment bug pass — 20 issues from real usage
+
+After the site was actually deployed, 20 issues came back from hands-on
+testing. All 20 were addressed; here's what each one actually was and how
+it was fixed (or, for the two that couldn't be fully verified without a
+browser, what was done and what's still an open question).
+
+**Real bugs (not just polish):**
+- **#15 (Profile page blank for a promoted admin) and #17 (a "Demo only —
+  admin tier" switcher visible to every signed-in user)** turned out to be
+  the same root cause: `App.jsx` had a leftover local `adminRole` demo
+  toggle (defaulting to `'top'`) that decided which Profile view to show,
+  completely disconnected from the actual signed-in user's real `tier`.
+  Any signed-in user — including a plain `user`-tier account — could see
+  and click between "Regular User / Top Tier Admin / Low Tier Admin" in
+  the UI. The backend's real tier checks meant no actual data leaked, but
+  it was confusing and wrong. Fixed by removing the toggle entirely; a new
+  `ProfileRoute` component reads the real `user.tier` from `AuthContext`
+  and renders the correct view with no client-side override possible.
+  A React `ErrorBoundary` was also added at the app root as a safety net —
+  it can't fix whatever the *original* blank-page crash's root cause was
+  without seeing the actual browser console error, but it turns any future
+  crash into a visible message instead of silence.
+- **#19 (Create My League did nothing visible)**: it was never actually
+  broken — it silently created a league literally named `"New League"`
+  every time (no name input existed) and showed no result anywhere. Fixed:
+  it now prompts for a real name, and since there's no "My Active Leagues"
+  list in the UI yet (see gaps below), shows the invitation code directly,
+  since that's the one piece of information the user actually needs.
+- **#20 (Save Changes did nothing)**: `ProfilePageContainer` was catching
+  every save error with `.catch(console.error)`, which meant the promise
+  always resolved successfully even on a real failure (expired session,
+  duplicate username, anything) — a user would click Save and see nothing,
+  ever, on failure. Fixed by letting errors propagate to
+  `AccountSettingsForm`, which now tracks its own save state and shows a
+  real inline success/error message. Verified all three paths against a
+  running server: successful save, invalid/expired token, duplicate
+  username — each now returns a message a real user would understand.
+- **#11 ("Message To Administrator" did nothing)**: it was a bare
+  `console.log`. Added `POST /contact-admin` (public, works signed-in or
+  signed-out via a new `optionalAuth` middleware) storing into a new
+  `admin_messages` table, and a real modal on the frontend. There is
+  **no admin-facing inbox UI to read these yet** — flagged as a real gap
+  below, not hidden.
+- **#9 (address bar never changes per page) and #14 (Back button exits the
+  site instead of going back)**: both were the same underlying issue — the
+  whole app was one URL with in-memory view-switching, never touching
+  browser history at all. Fixed with `react-router-dom` (new dependency):
+  every page is now a real route (`/live`, `/leagues`, `/match/:id`, etc.),
+  the browser Back button works correctly, and the tab title updates per
+  page too. `nginx.conf`'s SPA fallback (`try_files ... /index.html`) was
+  already written anticipating this change, so no deployment config needed
+  updating.
+- **#2 (two "Sign In" buttons on mobile / narrow desktop)**: `TopBar`'s own
+  inline Sign In button had no responsive guard, so it rendered at every
+  width alongside `TabBar`'s Sign In tab (which only shows below the `md`
+  breakpoint). Fixed by hiding TopBar's version below `md`.
+- **#3 (footer floats in the middle of the page on short pages)**: the app
+  root had no flex layout — nothing was telling the footer to stay at the
+  bottom when content didn't fill the viewport. Fixed with a standard
+  sticky-footer pattern (`min-h-screen flex flex-col` on the root, `flex-1`
+  on the main content area).
+- **#6 (RTL layout mirroring should be disabled — text-only translation)**:
+  `dir="rtl"` was being set on the whole app when Persian was selected,
+  mirroring the entire layout (which was the correct interpretation of the
+  spec at the time, and the RTL mirroring itself worked correctly — see
+  the earlier "RTL pass" section above). The site owner's explicit product
+  decision overrides that: `dir` is now hardcoded to `"ltr"` always: only
+  `useT()`'s text changes when the language toggle is used, the layout
+  never flips. The `rtl:` Tailwind variant and its handful of call sites
+  (`Footer`, `PredictionCard`, `Toggle`, `HomePage`, `LivePage`) are now
+  dead code — harmless (they simply never match), left in place rather
+  than stripped out under time pressure, but worth cleaning up eventually.
+- **#18 (should say "Log out", not "Join", once signed in)**: the Join
+  button was unconditionally rendered regardless of sign-in state (which
+  was actually a literal reading of spec §5.1's "Join: always visible") —
+  the site owner's explicit product decision overrides that: signed-in
+  users now see a Log out button in that slot instead.
+
+**UI polish (real, but lower-stakes):**
+- **#1**: logo doubled in size (was 28px, easy to miss in the nav).
+- **#4**: Sign In / Join resized to match the EN/FA toggle's footprint
+  (were noticeably larger than every other nav control).
+- **#5**: Join switched from gold to the diamond accent, so it doesn't
+  visually compete with gold's meaning elsewhere (trophies, primary CTAs).
+- **#7, #10, #12**: the logo+site-name header above the Sign In / Join /
+  Password Recovery forms was removed from all three — redundant directly
+  under the global TopBar's own logo.
+- **#8**: the Captcha checkbox was always functional (click → toggles →
+  gates the submit button) — what actually looked broken was a dev-only
+  note ("placeholder — wire a real provider") rendering directly to end
+  users. Removed from the visible UI; the real caveat (this is a manual
+  checkbox, not an actual bot-blocking captcha, which needs a real
+  provider like hCaptcha/Turnstile with a site key and server-side verify)
+  is now only a code comment.
+- **#13**: removed the Prediction page's subtitle line per request.
+- **#16 (no data anywhere)**: most likely a deployment/data-population
+  state, not a bug — a fresh backend has an empty database until an admin
+  configures a competition and runs the two data-source integrations (see
+  "Local development setup" above). Improved the actual UI regardless: the
+  Live and Leagues pages previously rendered nothing at all when empty,
+  with zero explanation; both now show a clear message instead of a blank
+  area.
+
+**Verification performed**: `npm run build` succeeded after every batch of
+changes (125 modules, up from 119); the new `/contact-admin` endpoint was
+hit against a running server signed-in, signed-out, and with an empty
+message, confirming correct storage and validation in all three cases;
+`POST /prediction-leagues` (Create League) was verified to return a real
+usable invitation code and correctly promote the creator to `admin_low`;
+`PATCH /profile/account` (Save Changes) was verified against success,
+invalid-token, and duplicate-username cases, confirming each produces a
+message the new frontend error handling can actually display.
+
+**What's still open**: #15's *exact* original crash still isn't confirmed
+without a real browser console error — the demo-toggle removal fixes the
+most likely cause, and the ErrorBoundary makes any *remaining* cause
+visible instead of silent, but neither is a substitute for seeing the
+actual error. #16 needs the site owner to confirm whether the backend is
+actually deployed and reachable, and whether `MatchesStatistics`/
+`livescore-api` have been run at least once — see `BACKEND_SETUP.md`.
+
+## Data extraction API audit — found and fixed the real "doesn't work" cause
+
+Following up on #16, a full field-by-field audit was done against both
+vendored Python projects' actual source (not just re-reading earlier notes),
+and the `MatchesStatistics` integration turned out to have a genuinely
+confirmed, reproduced bug making it non-functional from a fresh deploy.
+`livescore-api`'s integration, on the other hand, checked out completely
+correct.
+
+### `MatchesStatistics` — confirmed broken, now fixed
+
+**Bug 1 (reproduced with the real CLI, not just read from source):**
+`cmd_scrape` calls `db.connect()`, which only opens a raw sqlite3
+connection — only `init_db()` runs the actual `CREATE TABLE` statements,
+and nothing was ever calling it before a scrape. On a truly fresh
+deployment (`football.db` doesn't exist yet), running `scrape` crashes
+immediately:
+```
+sqlite3.OperationalError: no such table: teams
+```
+Reproduced exactly with a real venv and the real CLI before writing any
+fix. **Fixed**: `runScrapeNow()` and the upload handler both now run
+`init-db` first (idempotent — it's just `CREATE TABLE IF NOT EXISTS`).
+
+**Bug 2 (also reproduced):** even with the schema initialized, a database
+with zero registered teams doesn't error — `cmd_scrape` silently
+`return`s with exit code 0. Reproduced this too: it's actually *worse*
+than Bug 1 from a debugging standpoint, since the admin panel would show
+a green "success" status forever while the site stayed completely empty,
+with no signal anything was wrong. **Fixed**: `runScrapeNow()` now checks
+the team count first and returns a clear, actionable message ("No teams
+registered yet — upload a team-links workbook first") instead of a
+misleading success.
+
+**Bug 3 (the actual root cause of "nothing works"):** `POST
+/admin/matches-statistics/upload` was a `501` stub from the very first
+backend pass — meaning there was **no way at all**, via the web UI, to
+get any team data into the system. Without teams, nothing else in this
+pipeline can ever produce data, regardless of Bugs 1/2 being fixed.
+**Fixed for real**: the endpoint now handles both of `MatchesStatisticsPanel`'s
+upload modes:
+- `online` mode (the "Team-links workbook" field) → saves the uploaded
+  `.xlsx`, runs `import-teams --xlsx <path>` for real.
+- `offline` mode (the "Saved HTML files" field, now accepting multiple
+  files — `FileUploadField` gained a `multiple` prop for this) → saves
+  every file with its **original filename preserved** (critical: the
+  Python side's `scan_offline_directory()` matches files by their
+  `*-Matches.html` / `*-team-statistic.html` suffix — multer's default
+  renaming would have made every file silently unmatched) into a shared
+  temp directory, then runs `scrape --mode offline --dir <dir>`
+  immediately (offline files are a one-shot "process this batch now"
+  action, unlike the persistent online scraping loop).
+
+**How this was verified** — not just written and assumed correct:
+1. Built a real Python venv with the vendored tool's actual dependencies
+   (`beautifulsoup4`, `openpyxl`, etc. — no Playwright needed for this one)
+   and reproduced Bugs 1 and 2 directly against the real, unmodified
+   `cli.py` before writing any fix.
+2. Built a real, valid `Teams-Links.xlsx` matching the exact column format
+   `sources/excel_loader.py` expects, and a real offline HTML fixture
+   matching `parsers/matches.py`'s expected DOM structure closely enough
+   for the parser to extract an actual match (3-1, finished, with the
+   right competition name) — confirming the whole pipeline shape is
+   correct, not just the command-line arguments.
+3. Ran the **actual Node backend** (not a manual replication of the
+   commands) against a genuinely fresh, never-initialized database through
+   real HTTP requests: `POST /admin/matches-statistics/run` on a virgin
+   database now returns the clear "no teams" message instead of crashing;
+   `POST /admin/matches-statistics/upload` with a real multipart workbook
+   upload correctly registers 2 teams; a follow-up multipart upload of a
+   real offline HTML file correctly scrapes and stores the match, verified
+   by reading it back out of the actual `football.db` file afterward.
+4. Confirmed `online_loader.py`'s `fetch()` has a real 20-second timeout
+   with 2 retries built in — a scrape against an unreachable host degrades
+   within a bounded time, it doesn't hang forever. (A live network scrape
+   against the real football360.ir couldn't be tested end-to-end in this
+   environment — it's not in the sandbox's network allowlist — but the
+   request-building code and timeout behavior are confirmed correct up to
+   the actual network call.)
+
+### `livescore-api` — audited, found correct, not touched
+
+Every field name used in `src/routes/live.js` / `src/routes/matchDetail.js`
+/ `src/services/liveScoreClient.js` was checked directly against the real
+`app/main.py`, `app/models.py`, and `app/scraper.py` — endpoint paths,
+request body field names (`interval_seconds`, `recheck_seconds`), the exact
+Persian string used for finished-match detection (`"نتیجه نهایی"`, copied
+character-for-character from the real scheduler code, not retyped), every
+event type (`goal`, `own_goal`, `penalty_goal`, `yellow_card`, `red_card`,
+`substitution`), and every lineup/stats field name. All matched exactly —
+no changes needed. If live scores genuinely aren't showing on the deployed
+site, the most likely explanations are: the `livescore-api` Python service
+simply isn't running yet (it needs its own systemd service, Playwright, and
+a Chromium install — see `BACKEND_SETUP.md`), `LIVESCORE_API_KEY` doesn't
+match between the two services' `.env` files, or the two processes can't
+reach each other over `127.0.0.1:8000` on the VPS.
+
+### Remaining follow-up (not a confirmed bug, just worth doing)
+
+`runCli()`'s spawned child processes have no explicit timeout in the Node
+wrapper itself. The Python side's own `fetch()` retries/timeouts bound how
+long a *single URL* can hang, but a scrape across many teams has no
+overall ceiling. Worth adding a `maxBuffer`/timeout to the `spawn()` call
+as defense-in-depth for a very large team list or an unusually slow
+network, but not something that showed up in actual testing.

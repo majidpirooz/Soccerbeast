@@ -22,6 +22,24 @@ export function requireAuth(req, res, next) {
   next();
 }
 
+/**
+ * optionalAuth — for routes reachable both signed-in and signed-out (e.g.
+ * "message the administrator"). Attaches req.user if a valid token is
+ * present, silently leaves it undefined otherwise — never throws.
+ */
+export function optionalAuth(req, res, next) {
+  const header = req.headers.authorization || '';
+  const token = header.startsWith('Bearer ') ? header.slice(7) : null;
+  if (!token) return next();
+  try {
+    const payload = verifyToken(token);
+    req.user = db.prepare('SELECT * FROM users WHERE id = ?').get(payload.sub) || undefined;
+  } catch {
+    /* invalid/expired token on an optional-auth route -- just proceed signed-out, don't error */
+  }
+  next();
+}
+
 /** requireAdminTier — spec §7.6 tier gating. `minTier` is 'admin_low' (either admin tier ok) or 'admin_top'. */
 export function requireAdminTier(minTier = 'admin_low') {
   return (req, res, next) => {

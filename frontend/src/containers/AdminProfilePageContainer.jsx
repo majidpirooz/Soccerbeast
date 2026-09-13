@@ -127,8 +127,8 @@ function AdminToolsOnly({
       handlers={{
         onRunMatchesStatistics: () => adminApi.runMatchesStatisticsNow().then(refetch.scraperStatus.refetch),
         onSaveMatchesStatisticsSchedule: (v) => adminApi.saveMatchesStatisticsSchedule(v).then(refetch.scraperStatus.refetch),
-        onUploadHtml: (f) => adminApi.uploadMatchesStatisticsFile(f, 'offline'),
-        onUploadWorkbook: (f) => adminApi.uploadMatchesStatisticsFile(f, 'online'),
+        onUploadHtml: (f) => adminApi.uploadMatchesStatisticsFile(f, 'offline').then(refetch.scraperStatus.refetch),
+        onUploadWorkbook: (f) => adminApi.uploadMatchesStatisticsFile(f, 'online').then(refetch.scraperStatus.refetch),
         onSaveLiveScoreSchedule: (v) => adminApi.saveLiveScoreSchedule(v).then(refetch.scraperStatus.refetch),
         onForceStartLiveScore: () => adminApi.forceStartLiveScore().then(refetch.scraperStatus.refetch),
         onForceStopLiveScore: () => adminApi.forceStopLiveScore().then(refetch.scraperStatus.refetch),

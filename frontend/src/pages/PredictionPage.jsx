@@ -23,7 +23,6 @@ export default function PredictionPage({
     <div>
       <div className="max-w-[1120px] mx-auto px-4 pt-6.5 pb-4.5">
         <h1 className="font-display text-3xl">{t('prediction.title', 'Prediction League')}</h1>
-        <p className="text-textMute text-[13.5px] mt-1">{t('prediction.subtitle', 'Pick the score, climb the table, earn the trophies.')}</p>
       </div>
 
       <div className="max-w-[1120px] mx-auto px-4 py-6.5 pt-0">

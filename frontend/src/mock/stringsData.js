@@ -114,6 +114,8 @@ export const STRING_ENTRIES = [
   ['auth.recoveryInvalidUsername', "We couldn't find an account with that username.", 'حسابی با این نام کاربری پیدا نشد.'],
   ['auth.invitationCodeHint', 'Optional — joins that league instead of Main League.', 'اختیاری — به‌جای لیگ اصلی، به آن لیگ می‌پیوندید.'],
   ['auth.optional', 'Optional.', 'اختیاری.'],
+  ['live.noMatches', 'No matches to show right now — check back later, or ask an admin whether the data sources are running.', 'در حال حاضر بازی‌ای برای نمایش وجود ندارد — بعداً دوباره سر بزنید یا از مدیر بپرسید که آیا منابع داده فعال هستند.'],
+  ['leagues.noStandings', 'No standings yet — an admin needs to add a competition and run the data sources first.', 'هنوز جدولی وجود ندارد — مدیر باید ابتدا یک مسابقه اضافه کند و منابع داده را اجرا کند.'],
 ];
 
 /** As the {key: {en,fa}} dictionary api/strings.js's mock branch needs. */

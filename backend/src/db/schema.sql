@@ -211,3 +211,13 @@ CREATE TABLE IF NOT EXISTS admin_config (
     value_json  TEXT NOT NULL,
     updated_at  TEXT DEFAULT (datetime('now'))
 );
+
+-- "Message To Administrator" (footer link, spec §6.1). No admin-facing
+-- inbox UI reads these yet -- see ROADMAP.md -- this table exists so the
+-- feature is at minimum not a no-op that silently discards what someone typed.
+CREATE TABLE IF NOT EXISTS admin_messages (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id     INTEGER REFERENCES users(id) ON DELETE SET NULL,
+    message     TEXT NOT NULL,
+    created_at  TEXT DEFAULT (datetime('now'))
+);

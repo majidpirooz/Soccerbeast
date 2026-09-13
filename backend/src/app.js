@@ -10,6 +10,7 @@ import { liveRouter } from './routes/live.js';
 import { matchDetailRouter } from './routes/matchDetail.js';
 import { homeRouter } from './routes/home.js';
 import { stringsRouter } from './routes/strings.js';
+import { contactRouter } from './routes/contact.js';
 import { predictionsRouter } from './routes/predictions.js';
 
 import { matchesStatisticsRouter } from './routes/admin/matchesStatistics.js';
@@ -35,7 +36,7 @@ export function createApp() {
   // VITE_API_BASE_URL, not here (keeps this backend usable un-prefixed too,
   // e.g. behind an nginx location that strips /api/).
   const routers = [
-    authRouter, profileRouter, homeRouter, stringsRouter, leaguesRouter, liveRouter, matchDetailRouter, predictionsRouter,
+    authRouter, profileRouter, homeRouter, stringsRouter, contactRouter, leaguesRouter, liveRouter, matchDetailRouter, predictionsRouter,
     matchesStatisticsRouter, liveScoreApiAdminRouter, unmatchedTeamsRouter,
     teamsAdminRouter, arenasAdminRouter, matchesAdminRouter, leaguesAdminRouter,
     stringsAdminRouter, proxyPredictionsRouter,

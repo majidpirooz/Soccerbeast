@@ -48,7 +48,13 @@ export default function LeaguesPage({
       </div>
 
       <div className="max-w-[1120px] mx-auto px-4 py-6.5">
-        <StandingsTable rows={standingsRows} onOpenTeam={onOpenTeam} />
+        {standingsRows.length === 0 ? (
+          <p className="text-textMute text-[13px] py-10 text-center">
+            {t('leagues.noStandings', 'No standings yet — an admin needs to add a competition and run the data sources first.')}
+          </p>
+        ) : (
+          <StandingsTable rows={standingsRows} onOpenTeam={onOpenTeam} />
+        )}
       </div>
 
       <div className="max-w-[1120px] mx-auto px-4 py-6.5">

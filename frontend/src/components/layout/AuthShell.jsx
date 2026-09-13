@@ -1,13 +1,15 @@
-/** AuthShell — shared centered-card frame for the three auth pages, keeps their layout identical. */
+/**
+ * AuthShell — shared centered-card frame for the three auth pages (Sign In,
+ * Join, Password Recovery). Deliberately does NOT render a logo/site-name
+ * header above the card — all three pages already sit right below the
+ * global TopBar, which has its own logo, so a second one here was
+ * redundant clutter directly on top of the form. Removed per explicit
+ * feedback across all three pages.
+ */
 export default function AuthShell({ title, subtitle, children, footer }) {
   return (
     <div className="min-h-[70vh] flex items-center justify-center px-4 py-10">
       <div className="w-full max-w-sm">
-        <div className="flex items-center justify-center gap-2.5 mb-6">
-          <img src="/logo.png" alt="Soccer Beast" className="w-8 h-8 object-contain flex-shrink-0" />
-          <span className="font-display text-xl tracking-wide">SOCCER BEAST</span>
-        </div>
-
         <div className="bg-surface border border-line rounded-card p-6">
           <h1 className="font-display text-2xl text-center">{title}</h1>
           {subtitle && <p className="text-textMute text-[12.5px] text-center mt-1.5">{subtitle}</p>}

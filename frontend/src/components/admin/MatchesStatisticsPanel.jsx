@@ -25,12 +25,20 @@ export default function MatchesStatisticsPanel({ status, onRunNow, onSaveSchedul
       description="Scrapes team Matches + team-statistic pages from football360.ir. League-format competitions only."
       actions={<Button variant="ghost" onClick={onRunNow}>Run Now</Button>}
     >
-      <div className="flex items-center gap-4 mb-4 text-[12px] text-textMute">
+      <div className="flex items-center gap-4 mb-2 text-[12px] text-textMute flex-wrap">
         <span>
-          Last run: <b className="text-text">{status.lastRun}</b>
+          Last run: <b className="text-text">{status.lastRun || 'never'}</b>
         </span>
-        <Tag variant={status.lastResult === 'success' ? 'win' : 'loss'}>{status.lastResult}</Tag>
+        <Tag variant={status.lastResult === 'success' ? 'win' : status.lastResult === 'never run' ? 'neutral' : 'loss'}>{status.lastResult}</Tag>
+        <span>
+          Teams registered: <b className="text-text">{status.teamsRegistered ?? '—'}</b>
+        </span>
       </div>
+      {status.lastRunDetail && (
+        <pre className="text-[10.5px] text-textMute bg-bg1 rounded-lg p-2.5 mb-4 overflow-auto max-h-24 whitespace-pre-wrap">
+          {status.lastRunDetail}
+        </pre>
+      )}
 
       <div className="flex gap-2 mb-4">
         {['offline', 'online'].map((m) => (
@@ -50,14 +58,15 @@ export default function MatchesStatisticsPanel({ status, onRunNow, onSaveSchedul
         <FileUploadField
           label="Saved HTML files"
           accept=".html,.htm"
-          hint="Upload one or more saved football360.ir pages to parse offline."
+          multiple
+          hint="Upload every saved football360.ir page for the team(s) you want to process — each team needs its own Matches and/or team-statistic page, and teams must already be registered via the online mode's workbook at least once."
           onFile={onUploadHtml}
         />
       ) : (
         <FileUploadField
           label="Team-links workbook"
           accept=".xlsx,.xls"
-          hint="Multi-sheet Excel workbook — one sheet per league, each row a team profile link."
+          hint="Multi-sheet Excel workbook — one sheet per league, each row a team profile link. Upload this first, before either scraping mode can find any teams to process."
           onFile={onUploadWorkbook}
         />
       )}

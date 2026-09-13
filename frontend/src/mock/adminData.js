@@ -8,6 +8,8 @@ export const scraperStatus = {
     mode: 'online', // 'offline' | 'online'
     lastRun: '2026-08-13 00:04',
     lastResult: 'success',
+    lastRunDetail: 'Scraped 24 team(s).',
+    teamsRegistered: 24,
     scheduled: true,
     scheduleCron: '0 0 * * *',
   },
